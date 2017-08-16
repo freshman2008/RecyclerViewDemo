@@ -15,6 +15,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".ListViewActivity">
+        </activity>
+        <activity android:name=".GirdViewActivity">
+        </activity>
+        <activity android:name=".StaggeredGridViewActivity">
+        </activity>
     </application>
 
 </manifest>
