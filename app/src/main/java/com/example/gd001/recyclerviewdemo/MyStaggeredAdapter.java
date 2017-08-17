@@ -19,7 +19,7 @@ public class MyStaggeredAdapter extends MyAdapter {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
         ViewGroup.LayoutParams params= holder.mTextView.getLayoutParams();
-        params.height = (int) (100 + Math.random() * 400);
+        params.height = (int) (200 + Math.random() * 400);
         holder.mTextView.setLayoutParams(params);
         holder.mTextView.setText(mDataset.get(position));
 
