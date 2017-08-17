@@ -7,11 +7,13 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -29,6 +31,7 @@ public class ListViewActivity extends AppCompatActivity {
     private MyAdapter mAdapter;
     private LinearLayoutManager mLayoutManager;
     private List<String> dataList = new ArrayList<>();
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     @Override
     protected void onStart() {
@@ -52,27 +55,34 @@ public class ListViewActivity extends AppCompatActivity {
         mLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.addItemDecoration(new DividerItemDecoration(this,LinearLayoutManager.VERTICAL));
+
+        swipeRefreshLayout=(SwipeRefreshLayout) findViewById(R.id.line_swipe_refresh) ;
+        swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary,R.color.colorPrimaryDark,R.color.colorAccent);
+        swipeRefreshLayout.setProgressViewOffset(false, 0,  (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics()));
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                new GetData().execute("http://192.168.8.10:8082/get/info/person");
+            }
+        });
     }
 
     private class GetData extends AsyncTask<String, Integer, String> {
-
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
             //设置swipeRefreshLayout为刷新状态
-//            swipeRefreshLayout.setRefreshing(true);
+            swipeRefreshLayout.setRefreshing(true);
         }
 
         @Override
         protected String doInBackground(String... params) {
-
             return MyOkhttp.get(params[0]);
         }
 
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
-            if(!TextUtils.isEmpty(result)){
-
+            if(!TextUtils.isEmpty(result)) {
                 JSONObject jsonObject;
                 JSONArray jsonArray;
                 String arrayStr = null;
@@ -81,6 +91,7 @@ public class ListViewActivity extends AppCompatActivity {
                     jsonObject = new JSONObject(result);
                     arrayStr = jsonObject.getString("person");
                     jsonArray= new JSONArray(arrayStr);
+                    dataList.clear();
                     for (int i=0; i<jsonArray.length(); ++i) {
                         jsonObject = jsonArray.getJSONObject(i);
                         String name = jsonObject.getString("name");
@@ -95,41 +106,35 @@ public class ListViewActivity extends AppCompatActivity {
                 mAdapter = new MyAdapter(dataList);
                 mAdapter.setOnItemClickLitener(new MyAdapter.OnItemClickLitener() {
                     @Override
-                    public void onItemClick(View view)
-                    {
+                    public void onItemClick(View view) {
                         LinearLayout layout = (LinearLayout) view;
                         TextView tv = (TextView) layout.findViewById(R.id.textView);
-                        Toast.makeText(ListViewActivity.this, tv.getText() + " click",
-                                Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ListViewActivity.this, tv.getText() + " click", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
-                    public void onItemLongClick(View view)
-                    {
+                    public void onItemLongClick(View view) {
                         LinearLayout layout = (LinearLayout) view;
                         TextView tv = (TextView) layout.findViewById(R.id.textView);
-                        Toast.makeText(ListViewActivity.this, tv.getText() + " long click",
-                                Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ListViewActivity.this, tv.getText() + " long click", Toast.LENGTH_SHORT).show();
                     }
                 });
                 mRecyclerView.setAdapter(mAdapter);
             } else {
                 mAdapter.notifyDataSetChanged();
             }
+            swipeRefreshLayout.setRefreshing(false);
         }
     }
 
     class DividerItemDecoration extends RecyclerView.ItemDecoration{
-        private final int[] ATTRS = new int[]{
-                android.R.attr.listDivider
+        private final int[] ATTRS = new int[] {
+            android.R.attr.listDivider
         };
 
         public static final int HORIZONTAL_LIST = LinearLayoutManager.HORIZONTAL;
-
         public static final int VERTICAL_LIST = LinearLayoutManager.VERTICAL;
-
         private Drawable mDivider;
-
         private int mOrientation;
 
         public DividerItemDecoration(Context context, int orientation) {
@@ -149,15 +154,12 @@ public class ListViewActivity extends AppCompatActivity {
         @Override
         public void onDraw(Canvas c, RecyclerView parent) {
             Log.v("hello", "recyclerview - itemdecoration onDraw()");
-
             if (mOrientation == VERTICAL_LIST) {
                 drawVertical(c, parent);
             } else {
                 drawHorizontal(c, parent);
             }
-
         }
-
 
         public void drawVertical(Canvas c, RecyclerView parent) {
             final int left = parent.getPaddingLeft();

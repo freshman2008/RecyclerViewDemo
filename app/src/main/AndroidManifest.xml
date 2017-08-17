@@ -18,7 +18,8 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".ListViewActivity">
+        <activity android:name=".ListViewActivity"
+            android:screenOrientation="portrait">
         </activity>
         <activity android:name=".GirdViewActivity">
         </activity>
